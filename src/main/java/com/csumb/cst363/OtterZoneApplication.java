@@ -1,4 +1,4 @@
-package com.csumb.otterzone;
+package com.csumb.cst363;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
