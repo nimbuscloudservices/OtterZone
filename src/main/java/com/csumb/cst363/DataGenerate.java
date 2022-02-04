@@ -56,10 +56,9 @@ public class DataGenerate
         
          
         
-         ps.setInt(1, ssn);
+         ps.setString(1, String.valueOf(ssn));
          ps.setString(2, data);
          ps.setString(3, random_specialty);
-         //Needs to be fixed
          ps.setString(4, random_date);
          
          
