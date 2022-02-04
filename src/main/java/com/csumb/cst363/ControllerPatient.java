@@ -50,7 +50,7 @@ public class ControllerPatient {
 	 * Process a form to create new patient.
 	 */
 	@PostMapping("/patient/new")
-	public String newPatient(Patient p, Model model) {
+	public String newPatient(Patient patient, Model model) {
 
 		// TODO
 
@@ -58,18 +58,45 @@ public class ControllerPatient {
 		 * Complete database logic to verify and process new patient
 		 */
 		// fake data for generated patient id.
-		p.setPatientId("300198");
-		model.addAttribute("message", "Registration successful.");
-		model.addAttribute("patient", p);
-		return "patient_show";
-
+//		p.setPatientId("300198");
+//		model.addAttribute("message", "Registration successful.");
+//		model.addAttribute("patient", p);
+		
+		try (Connection con = getConnection();) {
+			PreparedStatement ps = con.prepareStatement("insert into patient(ssn, name, birthdate, street, city, state, zipcode, primaryName ) values(?, ?, ?, ?, ?, ?, ?, ?)", 
+					Statement.RETURN_GENERATED_KEYS);
+			ps.setString(1, patient.getSsn());
+			ps.setString(2, patient.getName());
+			ps.setString(3, patient.getBirthdate());
+			ps.setString(4, patient.getStreet());
+			ps.setString(5, patient.getCity());
+			ps.setString(6, patient.getState());
+			ps.setString(7, patient.getZipcode());
+			ps.setString(8, patient.getPrimaryName());
+			
+			ps.executeUpdate();
+			ResultSet rs = ps.getGeneratedKeys();
+			if (rs.next()) patient.setPatientId((int)rs.getLong(1));
+		
+			// display message and patient information
+			model.addAttribute("message", "Registration successful.");
+			model.addAttribute("patient", patient);
+			return "patient_show";
+			
+		} catch (SQLException e) {
+			model.addAttribute("message", "SQL Error."+e.getMessage());
+			model.addAttribute("patient", patient);
+			return "patient_show";	
+			
+		}
+	
 	}
 	
 	/*
 	 * Search for patient by patient id and name.
 	 */
 	@PostMapping("/patient/show")
-	public String getPatientForm(@RequestParam("patientId") String patientId, @RequestParam("name") String name,
+	public String getPatientForm(Patient patient, @RequestParam("patientId") int patientId, @RequestParam("name") String name,
 			Model model) {
 
 		// TODO
@@ -80,47 +107,123 @@ public class ControllerPatient {
 		 */
 		
 		// return fake data for now.
-		Patient p = new Patient();
-		p.setPatientId(patientId);
-		p.setName(name);
-		p.setBirthdate("2001-01-01");
-		p.setStreet("123 Main");
-		p.setCity("SunCity");
-		p.setState("CA");
-		p.setZipcode("99999");
-		p.setPrimaryID(11111);
-		p.setPrimaryName("Dr. Watson");
-		p.setSpecialty("Family Medicine");
-		p.setYears("1992");
+		
+		
+		try (Connection con = getConnection();) {
 
-		model.addAttribute("patient", p);
-		return "patient_show";
+			System.out.println("start getDoctor " + patient);
+			PreparedStatement ps = con.prepareStatement("select patientId, name, birthdate, street, city, state, zipcode, primaryName from patient where patientId=? and name=?");
+			ps.setInt(1, patient.getPatientId());
+			ps.setString(2, patient.getName());
+			
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				patient.setPatientId(rs.getInt(1));
+				patient.setName(rs.getString(2));
+				patient.setBirthdate(rs.getString(3));
+				patient.setStreet(rs.getString(4));
+				patient.setCity(rs.getString(5));
+				patient.setState(rs.getString(6));
+				patient.setZipcode(rs.getString(7));
+				patient.setPrimaryName(rs.getString(8));
+				
+				model.addAttribute("patient", patient);
+				// for DEBUG 
+				System.out.println("end getDoctor " + patient);
+				return "patient_show";
+				
+			} else {
+				model.addAttribute("message", "Patient not found.");
+				return "patient_get";
+			}
+						
+		} catch (SQLException e) {
+			System.out.println("SQL error in getPatient "+e.getMessage());
+			model.addAttribute("message", "SQL Error."+e.getMessage());
+			model.addAttribute("doctor", patient);
+			return "patient_show";
+		}
+		
+//		Patient p = new Patient();
+//		p.setPatientId(patientId);
+//		p.setName(name);
+//		p.setBirthdate("2001-01-01");
+//		p.setStreet("123 Main");
+//		p.setCity("SunCity");
+//		p.setState("CA");
+//		p.setZipcode("99999");
+//		p.setPrimaryID(11111);
+//		p.setPrimaryName("Dr. Watson");
+//		p.setSpecialty("Family Medicine");
+//		p.setYears("1992");
+//
+//		model.addAttribute("patient", p);
+//		return "patient_show";
 	}
 
+	
+	
+	
+	
 	/*
 	 * Search for patient by patient id.
 	 */
 	@GetMapping("/patient/edit/{patientId}")
-	public String updatePatient(@PathVariable String patientId, Model model) {
+	public String updatePatient(@PathVariable int patientId, Model model) {
 
 		// TODO Complete database logic search for patient by id.
+		
+		Patient patient = new Patient();
+		patient.setPatientId(patientId);
+		try (Connection con = getConnection();) {
+
+			PreparedStatement ps = con.prepareStatement("select patientId, name, birthdate, street, city, state, zipcode, primaryName from patient where patientId=?");
+			ps.setInt(1,  patientId);
+			
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				patient.setPatientId(rs.getInt(1));
+				patient.setName(rs.getString(2));
+				patient.setBirthdate(rs.getString(3));
+				patient.setStreet(rs.getString(4));
+				patient.setCity(rs.getString(5));
+				patient.setState(rs.getString(6));
+				patient.setZipcode(rs.getString(7));
+				patient.setPrimaryName(rs.getString(8));
+				
+				model.addAttribute("patient", patient);
+				return "patient_edit";
+			} else {
+				model.addAttribute("message", "Patient not found.");
+				model.addAttribute("patient", patient);
+				return "patient_get";
+			}
+			
+		} catch (SQLException e) {
+			model.addAttribute("message", "SQL Error."+e.getMessage());
+			model.addAttribute("patient", patient);
+			return "patient_get";
+			
+		}
+		
+		
 
 		// return fake data for now.
-		Patient p = new Patient();
-		p.setPatientId(patientId);
-		p.setName("Alex Patient");
-		p.setBirthdate("2001-01-01");
-		p.setStreet("123 Main");
-		p.setCity("SunCity");
-		p.setState("CA");
-		p.setZipcode("99999");
-		p.setPrimaryID(11111);
-		p.setPrimaryName("Dr. Watson");
-		p.setSpecialty("Family Medicine");
-		p.setYears("1992");
-
-		model.addAttribute("patient", p);
-		return "patient_edit";
+//		Patient p = new Patient();
+//		p.setPatientId(patientId);
+//		p.setName("Alex Patient");
+//		p.setBirthdate("2001-01-01");
+//		p.setStreet("123 Main");
+//		p.setCity("SunCity");
+//		p.setState("CA");
+//		p.setZipcode("99999");
+//		p.setPrimaryID(11111);
+//		p.setPrimaryName("Dr. Watson");
+//		p.setSpecialty("Family Medicine");
+//		p.setYears("1992");
+//
+//		model.addAttribute("patient", p);
+//		return "patient_edit";
 	}
 	
 	
@@ -128,16 +231,44 @@ public class ControllerPatient {
 	 * Process changes to patient address and primary doctor
 	 */
 	@PostMapping("/patient/edit")
-	public String updatePatient(Patient p, Model model) {
+	public String updatePatient(Patient patient, Model model) {
 
+		try (Connection con = getConnection();) {
+
+			PreparedStatement ps = con.prepareStatement("update patient set street=?, city=?, state=?, zipcode=?, primaryName=? where patientId=?");
+			ps.setString(1,  patient.getStreet());
+			ps.setString(2,  patient.getCity());
+			ps.setString(3,  patient.getState());
+			ps.setString(4,  patient.getZipcode());
+			ps.setString(5,  patient.getPrimaryName());
+			ps.setInt(6,  patient.getPatientId());
+			
+			int rc = ps.executeUpdate();
+			if (rc==1) {
+				model.addAttribute("message", "Update successful");
+				model.addAttribute("patient", patient);
+				return "patient_show";
+				
+			}else {
+				model.addAttribute("message", "Error. Update was not successful");
+				model.addAttribute("patient", patient);
+				return "patient_edit";
+			}
+				
+		} catch (SQLException e) {
+			model.addAttribute("message", "SQL Error."+e.getMessage());
+			model.addAttribute("patient", patient);
+			return "patient_edit";
+		}
+		
 		// TODO
 
 		/*
 		 * validate primary doctor name and other data update databaser
 		 */
-
-		model.addAttribute("patient", p);
-		return "patient_show";
+//
+//		model.addAttribute("patient", p);
+//		return "patient_show";
 	}
 
 	/*
