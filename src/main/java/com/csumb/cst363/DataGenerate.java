@@ -14,6 +14,26 @@ public class DataGenerate
    {
  
          int doc_id = 0;
+         File name = new File("src/main/resources/names.txt");
+         Scanner test = new Scanner(name);
+         
+         Random gen = new Random();
+         String[] specialties = { "Internal Medicine", 
+               "Family Medicine", "Pediatrics", "Orthopedics",
+               "Dermatology",  "Cardiology", "Gynecology", 
+               "Gastroenterology", "Psychiatry", "Oncology" };
+         
+         Random ssn_generator = new Random(100000000); 
+         int A = 1;
+         int B = 99999999;
+         
+         Random number_generator = new Random(20); 
+         int C = 1;
+         int D = 19;
+         
+         int[] birth_year = {1980, 1985, 1990, 1995, 2000};
+         
+         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("YYYY-MM-dd");
          
          try(Connection con = DriverManager.getConnection("jdbc:mysql://ec2-13-56-197-130.us-west-1.compute.amazonaws.com:3306/OtterZoneDB", "root", "ToInfinityAndBeyond");)
          {
@@ -21,38 +41,24 @@ public class DataGenerate
             for(int i=0; i<10; i++)
             {
                //Generating random specialty. 
-               Random gen = new Random();
-               String[] specialties = { "Internal Medicine", 
-                     "Family Medicine", "Pediatrics", "Orthopedics",
-                     "Dermatology",  "Cardiology", "Gynecology", 
-                     "Gastroenterology", "Psychiatry", "Oncology" };
+               
                String random_specialty = specialties[gen.nextInt(specialties.length)];
                
                //Generating random SSN number for doctor.
-               Random ssn_generator = new Random(100000000); 
-               int A = 1;
-               int B = 99999999;
                int doctor_ssn =   A + ssn_generator.nextInt(B-A+1);
       
                
                //IO to get random name for doctor. 
-               File name = new File("src/main/resources/names.txt");
-               Scanner test = new Scanner(name);
                test.hasNextLine();
                String doctor_name = test.nextLine();
           
                //Generating random date for doctor. 
-               int[] birth_year = {1980, 1985, 1990, 1995, 2000};
                int random_birth_year = birth_year[gen.nextInt(birth_year.length)];
-               
-               Random number_generator = new Random(20); 
-               int C = 1;
-               int D = 19;
                int random_number = C + number_generator.nextInt(D-C+1);
                
                random_birth_year+=random_number;
                
-               SimpleDateFormat simpleDateFormat = new SimpleDateFormat("YYYY-MM-dd");
+               
                Calendar c = Calendar.getInstance();
                c.set(Calendar.YEAR,  random_birth_year);
                c.set(Calendar.DAY_OF_YEAR, 1);
