@@ -40,7 +40,7 @@ public class ControllerDoctor {
 	public String createDoctor(Doctor doctor, Model model) {
 		
 		try (Connection con = getConnection();) {
-			PreparedStatement ps = con.prepareStatement("insert into doctor(name, specialty, practice_since,  ssn ) values(?, ?, ?, ?)", 
+			PreparedStatement ps = con.prepareStatement("insert into doctor(name, specialty, practice_since_year,  ssn ) values(?, ?, ?, ?)",
 					Statement.RETURN_GENERATED_KEYS);
 			ps.setString(1, doctor.getName());
 			ps.setString(2, doctor.getSpecialty());
