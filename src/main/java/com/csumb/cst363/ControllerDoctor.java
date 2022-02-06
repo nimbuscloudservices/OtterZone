@@ -40,7 +40,10 @@ public class ControllerDoctor {
 	public String createDoctor(Doctor doctor, Model model) {
 		
 		try (Connection con = getConnection();) {
-			PreparedStatement ps = con.prepareStatement("insert into doctor(name, specialty, practice_since_year,  ssn ) values(?, ?, ?, ?)",
+			PreparedStatement ps = con.prepareStatement("insert into doctor" +
+																	  "(name, specialty, " +
+																	  "practice_since_year,  " +
+																	  "ssn ) values(?, ?, ?, ?)",
 					Statement.RETURN_GENERATED_KEYS);
 			ps.setString(1, doctor.getName());
 			ps.setString(2, doctor.getSpecialty());
@@ -82,7 +85,9 @@ public class ControllerDoctor {
 		try (Connection con = getConnection();) {
 			// for DEBUG 
 			System.out.println("start getDoctor "+doctor);
-			PreparedStatement ps = con.prepareStatement("select name, specialty, practice_since from doctor where id=? and name=?");
+			PreparedStatement ps = con.prepareStatement("select name, specialty," +
+																	  " practice_since_year " +
+																	  "from doctor where id=? and name=?");
 			ps.setInt(1, doctor.getId());
 			ps.setString(2, doctor.getName());
 			
@@ -118,7 +123,9 @@ public class ControllerDoctor {
 		doctor.setId(id);
 		try (Connection con = getConnection();) {
 
-			PreparedStatement ps = con.prepareStatement("select name, specialty, practice_since from doctor where id=?");
+			PreparedStatement ps = con.prepareStatement("select name, specialty," +
+																	  " practice_since_year " +
+																	  "from doctor where id=?");
 			ps.setInt(1,  id);
 			
 			ResultSet rs = ps.executeQuery();
@@ -149,7 +156,10 @@ public class ControllerDoctor {
 	public String updateDoctor(Doctor doctor, Model model) {
 		try (Connection con = getConnection();) {
 
-			PreparedStatement ps = con.prepareStatement("update doctor set specialty=?, practice_since=? where id=?");
+			PreparedStatement ps = con.prepareStatement("update doctor set " +
+																	  "specialty=?, " +
+																	  "practice_since_year=? " +
+																	  "where id=?");
 			ps.setString(1,  doctor.getSpecialty());
 			ps.setString(2, doctor.getPractice_since_year());
 			ps.setInt(3,  doctor.getId());
