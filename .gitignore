@@ -31,6 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+#### Sensitive Info ####
+
+/src/main/resources/templates/application.properties
 /.mvn/
 mvnw.cmd
 mvnw

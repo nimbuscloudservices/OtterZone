@@ -11,7 +11,7 @@ public class FDAReport {
       String password = "ToInfinityAndBeyond";
       try (Connection con = DriverManager.getConnection(url, user, password); ) {
          con.setAutoCommit(false);
-         String sql = "Select";
+         String sql = "Select ";
 
 
 

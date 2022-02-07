@@ -52,10 +52,6 @@ public class ControllerPatient {
 	@PostMapping("/patient/new")
 	public String newPatient(Patient patient, Model model) {
 
-		/*
-		 * Complete database logic to verify and process new patient
-		 */
-		
 		try (Connection con = getConnection();) {
 			PreparedStatement ps = con.prepareStatement("insert into patient(ssn, name, birthdate, street, city, state, zipcode, primaryName ) values(?, ?, ?, ?, ?, ?, ?, ?)", 
 					Statement.RETURN_GENERATED_KEYS);
@@ -93,11 +89,6 @@ public class ControllerPatient {
 	public String getPatientForm(Patient patient, @RequestParam("patientId") int patientId, @RequestParam("name") String name,
 			Model model) {
 
-		/*
-		 * code to search for patient by id and name retrieve patient data and primary
-		 * doctor data create Patient object
-		 */
-		
 		try (Connection con = getConnection();) {
 
 			System.out.println("start getDoctor " + patient);
@@ -132,8 +123,8 @@ public class ControllerPatient {
 			model.addAttribute("doctor", patient);
 			return "patient_show";
 		}
+	}
 
-	}	
 	
 	/*
 	 * Search for patient by patient id.
@@ -210,15 +201,7 @@ public class ControllerPatient {
 			model.addAttribute("patient", patient);
 			return "patient_edit";
 		}
-		
-		// TODO
 
-		/*
-		 * validate primary doctor name and other data update databaser
-		 */
-//
-//		model.addAttribute("patient", p);
-//		return "patient_show";
 	}
 
 	/*

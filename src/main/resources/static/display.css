@@ -19,12 +19,12 @@ body {
 div+div {
     margin-top: 1em;
 }
-
 label span {
-    display: inline-block;
+   display: inline-block;
     width: 120px;
     text-align: right;
 }
+
 
 input, textarea {
     font: 1em sans-serif;
