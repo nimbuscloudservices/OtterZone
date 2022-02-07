@@ -52,15 +52,9 @@ public class ControllerPatient {
 	@PostMapping("/patient/new")
 	public String newPatient(Patient patient, Model model) {
 
-		// TODO
-
 		/*
 		 * Complete database logic to verify and process new patient
 		 */
-		// fake data for generated patient id.
-//		p.setPatientId("300198");
-//		model.addAttribute("message", "Registration successful.");
-//		model.addAttribute("patient", p);
 		
 		try (Connection con = getConnection();) {
 			PreparedStatement ps = con.prepareStatement("insert into patient(ssn, name, birthdate, street, city, state, zipcode, primaryName ) values(?, ?, ?, ?, ?, ?, ?, ?)", 
@@ -99,15 +93,10 @@ public class ControllerPatient {
 	public String getPatientForm(Patient patient, @RequestParam("patientId") int patientId, @RequestParam("name") String name,
 			Model model) {
 
-		// TODO
-
 		/*
 		 * code to search for patient by id and name retrieve patient data and primary
 		 * doctor data create Patient object
 		 */
-		
-		// return fake data for now.
-		
 		
 		try (Connection con = getConnection();) {
 
@@ -143,35 +132,14 @@ public class ControllerPatient {
 			model.addAttribute("doctor", patient);
 			return "patient_show";
 		}
-		
-//		Patient p = new Patient();
-//		p.setPatientId(patientId);
-//		p.setName(name);
-//		p.setBirthdate("2001-01-01");
-//		p.setStreet("123 Main");
-//		p.setCity("SunCity");
-//		p.setState("CA");
-//		p.setZipcode("99999");
-//		p.setPrimaryID(11111);
-//		p.setPrimaryName("Dr. Watson");
-//		p.setSpecialty("Family Medicine");
-//		p.setYears("1992");
-//
-//		model.addAttribute("patient", p);
-//		return "patient_show";
-	}
 
-	
-	
-	
+	}	
 	
 	/*
 	 * Search for patient by patient id.
 	 */
 	@GetMapping("/patient/edit/{patientId}")
 	public String updatePatient(@PathVariable int patientId, Model model) {
-
-		// TODO Complete database logic search for patient by id.
 		
 		Patient patient = new Patient();
 		patient.setPatientId(patientId);
@@ -205,25 +173,7 @@ public class ControllerPatient {
 			return "patient_get";
 			
 		}
-		
-		
 
-		// return fake data for now.
-//		Patient p = new Patient();
-//		p.setPatientId(patientId);
-//		p.setName("Alex Patient");
-//		p.setBirthdate("2001-01-01");
-//		p.setStreet("123 Main");
-//		p.setCity("SunCity");
-//		p.setState("CA");
-//		p.setZipcode("99999");
-//		p.setPrimaryID(11111);
-//		p.setPrimaryName("Dr. Watson");
-//		p.setSpecialty("Family Medicine");
-//		p.setYears("1992");
-//
-//		model.addAttribute("patient", p);
-//		return "patient_edit";
 	}
 	
 	

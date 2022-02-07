@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="www.thymeleaf.org">
+<head>
+<link href="/display.css" rel="stylesheet">
+</head>
+<body>
+
+	<form  action="/usage/get/" th:object="${drug_id}" method="POST">
+		<section>
+			<h1>Drug Usage Report</h1>
+			<p>
+				<span th:text="${message}"></span>
+			</p>
+			<p>
+				<label for="drug_id"> <span>Drug ID: </span>
+				</label> <input type="text" id="drug_id" th:field="*{drug_id}" />
+			</p>
+
+			<p>
+				<button type="submit">Get Usage Report</button>
+			</p>
+		</section>
+	</form>
+
+</body>
+</html>

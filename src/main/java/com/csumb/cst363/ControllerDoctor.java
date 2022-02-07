@@ -82,11 +82,12 @@ public class ControllerDoctor {
 		try (Connection con = getConnection();) {
 			// for DEBUG 
 			System.out.println("start getDoctor "+doctor);
-			PreparedStatement ps = con.prepareStatement("select name, specialty, practice_since from doctor where id=? and name=?");
+			PreparedStatement ps = con.prepareStatement("select name, specialty, practice_since_year from doctor where id=? and name=?");
 			ps.setInt(1, doctor.getId());
 			ps.setString(2, doctor.getName());
-			
 			ResultSet rs = ps.executeQuery();
+
+			
 			if (rs.next()) {
 				doctor.setName(rs.getString(1));
 				doctor.setPractice_since_year(rs.getString(3));
@@ -96,12 +97,16 @@ public class ControllerDoctor {
 				System.out.println("end getDoctor "+doctor);
 				return "doctor_show";
 				
-			} else {
+			} 
+			else {
 				model.addAttribute("message", "Doctor not found.");
 				return "doctor_get";
+
 			}
 						
-		} catch (SQLException e) {
+		}
+		
+		catch (SQLException e) {
 			System.out.println("SQL error in getDoctor "+e.getMessage());
 			model.addAttribute("message", "SQL Error."+e.getMessage());
 			model.addAttribute("doctor", doctor);
@@ -118,8 +123,10 @@ public class ControllerDoctor {
 		doctor.setId(id);
 		try (Connection con = getConnection();) {
 
-			PreparedStatement ps = con.prepareStatement("select name, specialty, practice_since from doctor where id=?");
-			ps.setInt(1,  id);
+			PreparedStatement ps = con.prepareStatement("select name, specialty," +
+														  " practice_since_year " +
+																	  "from doctor where id=?");
+			ps.setInt(1, doctor.getId());
 			
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
