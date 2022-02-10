@@ -48,7 +48,7 @@ public class ControllerPrescription {
    public String newPrescription(Prescription p,
                                  Model model) {
 
-      // TODO
+
       try (Connection con = getConnection();) {
          if (!isValidDoctor(p.getDoctor_ssn(), p.getDoctorName())) {
             model.addAttribute("message", "Error. Invalid Doctor Information.");
@@ -64,6 +64,12 @@ public class ControllerPrescription {
 
          if (!isValidDrug(p.getDrugName())) {
             model.addAttribute("message", "Error. Drug not found.");
+            model.addAttribute("prescription", p);
+            return "prescription_create";
+         }
+         if (p.getQuantity() > 0) {
+            model.addAttribute("message", "Error. Please enter quantity " +
+                    "greater than 0.");
             model.addAttribute("prescription", p);
             return "prescription_create";
          }
@@ -125,38 +131,54 @@ public class ControllerPrescription {
             return "prescription_fill";
          }
 
-         //Checks to validate prescription rxid and patient
-         if (!patientHasPrescription(p, model)) {
-            model.addAttribute("message", "Prescription Not Found");
+            //Checks to validate prescription rxid and patient
+            if (!patientHasPrescription(p, model)) {
+               model.addAttribute("message", "Prescription Not Found");
+               model.addAttribute("prescription", p);
+               return "prescription_fill";
+            }
+         //Checks to validate pharmacy information, if correct data is
+         // updated in prescription
+         if (!verifyAndUpdatePharmacy(p, model)) {
+            model.addAttribute("message", "Pharmacy Not Found");
             model.addAttribute("prescription", p);
             return "prescription_fill";
          }
-
-         //retrieve pharmacy id based on name and address
-         PreparedStatement pharmID = con.prepareStatement("SELECT pharmacyID," +
-                 " name " +
-                 "from Pharmacy, " +
-                 "Pharmacy_has_Prescription" +
-                 " " +
-                 "where " +
-                 "Pharmacy_has_Prescription.Pharmacy_pharmacyID = Pharmacy" +
-                 ".pharmacyID AND" +
-                 " name = ? AND" +
-                 "  pharmacyAddress " +
-                 "LIKE ?");
-         pharmID.setString(1, p.getPharmacyName());
-         pharmID.setString(2, "%" + p.getPharmacyStreet() + "%");
-
-         //Update prescription
-         PreparedStatement fill = con.prepareStatement("INSERT INTO " +
-                 "Pharmacy_has_Prescription(Prescription_rxid, " +
-                 "pharmacyAddress, pharmacyPhone, pharmacyName, dateFilled, " +
-                 "cost) VALUES (?, ?, ?, ?, ?, ?)");
-
+         fillPrescription(p, model);
       } catch (SQLException e) {
          e.printStackTrace();
       }
       return "prescription_show";
+   }
+
+   /**
+    * Inserts prescription data into pharmacy_has_drug relation
+    *
+    * @param p     prescription
+    * @param model
+    * @return true if successfully filled, false if not successfull
+    */
+   private boolean fillPrescription(Prescription p, Model model) {
+      try (Connection con = getConnection();) {
+
+         PreparedStatement fill = con.prepareStatement("INSERT INTO " +
+                 "Pharmacy_has_Prescription(Pharmacy_pharmacyID, " +
+                 "Prescription_rxid, " +
+                 "pharmacyAddress, pharmacyPhone, pharmacyName, dateFilled, " +
+                 "cost) VALUES (?, ?, ?, ?, ?, ?, ?)");
+         fill.setInt(1, Integer.parseInt(p.getPharmacyID()));
+         fill.setInt(2, Integer.parseInt(p.getRxid()));
+         fill.setString(3, p.getPharmacyAddress());
+         fill.setString(4, p.getPharmacyPhone());
+         fill.setString(5, p.getPharmacyName());
+         fill.setDouble(6, calculateCost(p, model));
+
+      } catch (SQLException e) {
+         model.addAttribute("message", "SQL Error: " + e.getMessage());
+         model.addAttribute("prescription", p);
+         return false;
+      }
+      return false;
    }
 
    /*
@@ -253,7 +275,7 @@ public class ControllerPrescription {
       String pharm_zip = p.getPharmacyZip();
 
 
-      if (rxid.isBlank() || pharm_Street.isBlank() || pharm_name.isBlank() || pharm_City.isBlank() || pharm_State.isBlank() ||pharm_zip.isBlank() ) {
+      if (rxid.isBlank() || pharm_Street.isBlank() || pharm_name.isBlank() || pharm_City.isBlank() || pharm_State.isBlank() || pharm_zip.isBlank()) {
          model.addAttribute("message", "Please fill all the fields");
          model.addAttribute("prescription", p);
          return false;
@@ -282,40 +304,79 @@ public class ControllerPrescription {
 
       return false;
    }
-   private boolean verifyPharmacy(Prescription p, Model model)
-   {
+
+   private boolean verifyAndUpdatePharmacy(Prescription p, Model model) {
       try (Connection con = getConnection();) {
          String pharm_name = p.getPharmacyName();
          String pharm_street = p.getPharmacyStreet();
          String pharm_city = p.getPharmacyCity();
          String pharm_state = p.getPharmacyState();
          String pharm_zip = p.getPharmacyZip();
-         PreparedStatement ps = con.prepareStatement("SELECT pharmacyID, name, street, city, state, zip, phone " +
-                 "from Pharmacy where name LIKE ? AND street LIKE ? AND city LIKE ? AND state = ? AND zip LIKE ?");
-         ps.setString(1,"%" + pharm_name + "%");
-         ps.setString(2,"%" + pharm_street + "%");
-         ps.setString(3,"%" + pharm_city + "%");
-         ps.setString(4,"%" + pharm_state + "%");
-         ps.setString(5,"%" + pharm_zip + "%");
+         PreparedStatement ps = con.prepareStatement("SELECT pharmacyID, " +
+                 "name, street, city, state, zip, phone " +
+                 "from Pharmacy where name LIKE ? AND street LIKE ? AND city " +
+                 "LIKE ? AND state = ? AND zip LIKE ?");
+         ps.setString(1, "%" + pharm_name + "%");
+         ps.setString(2, "%" + pharm_street + "%");
+         ps.setString(3, "%" + pharm_city + "%");
+         ps.setString(4, "%" + pharm_state + "%");
+         ps.setString(5, "%" + pharm_zip + "%");
 
          ResultSet rs = ps.executeQuery();
-         if(rs.next())
-         {
-            //TODO
+         if (rs.next()) {
+            p.setPharmacyID(rs.getString("pharmacyID"));
+            p.setPharmacyStreet(pharm_name);
+            p.setPharmacyStreet(pharm_street);
+            p.setPharmacyCity(pharm_city);
+            p.setPharmacyState(pharm_state);
+            p.setPharmacyZip(pharm_zip);
+            p.setPharmacyAddress();
             return true;
          }
 
 
       } catch (SQLException e) {
          e.printStackTrace();
+         model.addAttribute("message", "Error, Pharmacy Not Found.");
+         model.addAttribute("prescription", p);
+         return false;
       }
       return false;
    }
-   private void updatePrescription(Prescription p, Model model) {
-      try (Connection con = getConnection();) {
 
+   private double calculateCost(Prescription p, Model model) {
+      int id = Integer.MIN_VALUE;
+      double cost = 0;
+      try (Connection con = getConnection();) {
+         PreparedStatement trade_name_to_drugID = con.prepareStatement(
+                 "SELECT drug_id from drug where trade_name = ?");
+         trade_name_to_drugID.setString(1, p.getDrugName());
+         ResultSet drugID = trade_name_to_drugID.executeQuery();
+
+         if (drugID.next()) {
+            id = drugID.getInt("drug_id");
+         }
+
+         PreparedStatement ps = con.prepareStatement("SELECT " +
+                 "Pharmacy_idPharmacy, Drug_idDrug, quantity, cost from " +
+                 "Pharmacy_has_Drug WHERE Pharmacy_idPharmacy = ? AND " +
+                 "Drug_idDrug = ? ");
+         ps.setString(1, p.getPharmacyID());
+         ps.setInt(2, id);
+         ResultSet getCost = ps.executeQuery();
+         if(getCost.next())
+         {
+            cost = getCost.getDouble("cost") * p.getQuantity();
+            p.setCost(String.format("%.2f", cost));
+            return cost;
+         }
       } catch (SQLException e) {
          e.printStackTrace();
+         model.addAttribute("message", "Error, Couldn't calculate cost.");
+         model.addAttribute("prescription", p);
+         return 0;
       }
+      return 0;
    }
+
 }

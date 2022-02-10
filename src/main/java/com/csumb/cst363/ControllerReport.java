@@ -23,7 +23,7 @@ import java.sql.*;
    }
 
    /*
-    * Process doctor registration.
+    * Process report request.
     */
    @PostMapping("/report/generate")
    public String createReport(Report report, Model model) {
@@ -50,7 +50,10 @@ import java.sql.*;
         }
          while(rs.next())
         {
-
+            //TODO
+           //Iterate through resultset
+           //save data to List<List<String>> report data.
+           //do some magic in html template using foreach...
         }
 
          // display message and patient information

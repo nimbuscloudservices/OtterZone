@@ -29,7 +29,7 @@ public class Prescription {
       return pharmacyAddress;
    }
 
-   public void setPharmacyAddress(String pharmacyAddress) {
+   public void setPharmacyAddress() {
       this.pharmacyAddress =
               this.getPharmacyStreet() + ", " + this.getPharmacyCity() + ", " + this.getPharmacyState() + " " + this.getPharmacyZip();
    }
