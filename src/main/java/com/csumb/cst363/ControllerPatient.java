@@ -81,6 +81,11 @@ public class ControllerPatient {
 			   model.addAttribute("message", "Name cannot be non-alphabetic.");
             return "patient_register";
 			}
+			else if(patient.getBirthdate().isEmpty())
+			{
+			   model.addAttribute("message", "Enter a valid date of birth.");
+            return "patient_register";
+			}
 			else if(validate.validateStreet(patient) == false)
 			{
 			   model.addAttribute("message", "Street cannot be non-alphabetic or non-numeric.");
