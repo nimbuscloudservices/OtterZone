@@ -5,9 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
-import java.util.Objects;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
@@ -15,7 +12,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import javax.xml.transform.Result;
 
 @Controller public class ControllerPrescription
 {
@@ -57,27 +53,26 @@ import javax.xml.transform.Result;
       // TODO
       try (Connection con = getConnection();)
       {
-         //			//validate doctor information
-         //			PreparedStatement doctor_validation = con.prepareStatement
-         //			("SELECT doctor.ssn, doctor.name FROM doctor where ssn = ?
-         //			AND name = ?");
-         //			doctor_validation.setString(1,p.getDoctor_ssn());
-         //			doctor_validation.setString(2, p.getDoctorName());
-         //			ResultSet doctor_rs = doctor_validation.executeQuery();
-         //
-         //			//validate patient information
-         //			PreparedStatement patient_validation = con.prepareStatement
-         //			("SELECT EXISTS(SELECT patient.ssn, patient.name FROM
-         //			patient where ssn = ? AND name = ?)");
-         //			patient_validation.setString(1,p.getPatient_ssn());
-         //			patient_validation.setString(2, p.getPatientName());
-         //			ResultSet patient_rs = doctor_validation.executeQuery();
-         //
-         //			//validate drug name
-         //			PreparedStatement drug_validation = con.prepareStatement
-         //			("SELECT trade_name FROM drug where trade_name = ?");
-         //			patient_validation.setString(1,p.getDrugName());
-         //			ResultSet drug_rs = doctor_validation.executeQuery();
+         if(!isValidDoctor( p.getDoctor_ssn(), p.getDoctorName()))
+         {
+            model.addAttribute("message", "Error. Invalid Doctor Information.");
+            model.addAttribute("prescription", p);
+            return "prescription_create";
+         }
+         if(!isValidPatient( p.getPatient_ssn(), p.getPatientName()))
+         {
+            model.addAttribute("message", "Error. Invalid Patient Information.");
+            model.addAttribute("prescription", p);
+            return "prescription_create";
+         }
+
+         if(!isValidDrug(p.getDrugName()))
+         {
+            model.addAttribute("message", "Error. Drug not found.");
+            model.addAttribute("prescription", p);
+            return "prescription_create";
+         }
+
 
          PreparedStatement ps = con.prepareStatement(
                "insert into Prescription(doctor_ssn, doctorName, patient_ssn," +
@@ -130,8 +125,6 @@ import javax.xml.transform.Result;
    public String processFillForm(Prescription p, Model model)
    {
 
-      // TODO
-
       try (Connection con = getConnection();)
       {
          // checks that all fields are filled
@@ -150,7 +143,6 @@ import javax.xml.transform.Result;
                         "from Prescription where rxid = ? AND " +
                         "patientName = ?";
          PreparedStatement ps = con.prepareStatement(query);
-
          ps.setString(1, p.getRxid());
          ps.setString(2, p.getPatientName());
          ResultSet rs = ps.executeQuery();
@@ -177,6 +169,7 @@ import javax.xml.transform.Result;
          //Update prescription
          PreparedStatement fill = con.prepareStatement("INSERT INTO " +
                                                        "Pharmacy_has_Prescription(Prescription_rxid, pharmacyAddress, pharmacyPhone, pharmacyName, dateFilled, cost) VALUES (?, ?, ?, ?, ?, ?)");
+
       } catch (SQLException e)
       {
          e.printStackTrace();
@@ -194,5 +187,70 @@ import javax.xml.transform.Result;
             .getConnection();
       return conn;
    }
+
+   /**
+    * Helper method that validates doctor information
+    * @param doctor_ssn doctor's ssn
+    * @param name doctors name
+    * @return true if doctor information matches DB, false if not
+    */
+   private boolean isValidDoctor(String doctor_ssn, String name)
+   {
+      try(Connection con = getConnection();)
+      {
+         PreparedStatement ps = con.prepareStatement("SELECT name, ssn from doctor where name = ? and ssn = ?");
+         ps.setString(1, name);
+         ps.setInt(2, Integer.parseInt(doctor_ssn));
+         ResultSet rs = ps.executeQuery();
+
+         return rs.next();
+      } catch (SQLException e) {
+         e.printStackTrace();
+         return false;
+      }
+
+   }
+   /**
+    * Helper method that validates Patient information
+    * @param patient_ssn patient's ssn
+    * @param name patient name
+    * @return true if patient information matches DB, false if not
+    */
+   private boolean isValidPatient(String patient_ssn, String name)
+   {
+      try(Connection con = getConnection();)
+      {
+         PreparedStatement ps = con.prepareStatement("SELECT name, ssn from patient where name = ? and ssn = ?");
+         ps.setString(1, name);
+         ps.setInt(2, Integer.parseInt(patient_ssn));
+         ResultSet rs = ps.executeQuery();
+
+         return rs.next();
+      } catch (SQLException e) {
+         e.printStackTrace();
+         return false;
+      }
+
+   }
+
+   /**
+    * validates drug
+    * @param drug being prescribed
+    * @return true if drug exists, false if not
+    */
+   private boolean isValidDrug(String drug)
+   {
+      try(Connection con = getConnection();)
+      {
+         PreparedStatement ps = con.prepareStatement("SELECT trade_name from drug where trade_name LIKE ?");
+         ps.setString(1, "%" + drug + "%");
+         ResultSet rs = ps.executeQuery();
+         return rs.next();
+      } catch (SQLException e) {
+         e.printStackTrace();
+         return false;
+      }
+   }
+
 
 }
