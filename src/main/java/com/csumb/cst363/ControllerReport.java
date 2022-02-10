@@ -41,6 +41,7 @@ import java.sql.*;
          ps.setDate(3, (Date) report.getEnd_date());
 
          ResultSet rs = ps.executeQuery();
+
         if(!rs.next())
         {
            model.addAttribute("message", "No Results Found.");
@@ -49,7 +50,7 @@ import java.sql.*;
         }
          while(rs.next())
         {
-            //TODO
+
         }
 
          // display message and patient information
@@ -73,4 +74,5 @@ import java.sql.*;
               .getConnection();
       return conn;
    }
+
 }
