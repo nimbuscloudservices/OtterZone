@@ -131,6 +131,7 @@ import javax.xml.transform.Result;
    {
 
       // TODO
+
       try (Connection con = getConnection();)
       {
          // checks that all fields are filled
