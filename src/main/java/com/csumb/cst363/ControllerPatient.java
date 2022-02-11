@@ -261,7 +261,64 @@ public class ControllerPatient {
 			ps.setString(5,  patient.getPrimaryName());
 			ps.setString(6,  patient.getPatientId());
 
+			ValidateData validate = new ValidateData();
+
+			if(!validate.validateStreet(patient))
+			{
+			   model.addAttribute("message", "Street cannot be non-alphabetic or non-numeric.");
+            return "patient_edit";
+			}
+			else if(!validate.validateCity(patient))
+			{
+			   model.addAttribute("message", "City cannot be non-alphabetic");
+            return "patient_edit";
+			}
+			else if(!validate.validateState(patient))
+			{
+			   model.addAttribute("message", "State cannot be non-alphabetic");
+            return "patient_edit";
+			}
+			else if(!validate.validateZipcode(patient))
+			{
+			   model.addAttribute("message", "Zipcode must be 5 or 9 digits long.");
+            return "patient_edit";
+			}
+
+			if(validate.getCorrectDoctor(patient) == "Pediatrics")
+         {
+            //Checking for doctor
+            PreparedStatement cd = con.prepareStatement("select name from doctor where name =  ? AND specialty = ?");
+
+               cd.setString(1, patient.getPrimaryName());
+               cd.setString(2, "Pediatrics");
+
+               ResultSet rs = cd.executeQuery();
+
+               if (!rs.next()) {
+                  model.addAttribute("message", "Please select the correct primary doctor");
+                  return "patient_edit";
+               }
+         }
+         else
+         {
+            //Checking for doctor
+            PreparedStatement cd = con.prepareStatement("select name from doctor where name =  ? AND specialty IN (?, ?)");
+
+               cd.setString(1, patient.getPrimaryName());
+               cd.setString(2, "Family Medicine");
+               cd.setString(3, "Internal Medicine");
+
+               ResultSet rs = cd.executeQuery();
+
+               if (!rs.next()) {
+                  model.addAttribute("message", "Please select the correct primary doctor");
+                  return "patient_edit";
+               }
+         }
+
+
 			int rc = ps.executeUpdate();
+
 			if (rc==1) {
 				model.addAttribute("message", "Update successful");
 				model.addAttribute("patient", patient);
