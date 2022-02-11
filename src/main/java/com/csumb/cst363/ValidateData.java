@@ -1,22 +1,21 @@
 package com.csumb.cst363;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+
 public class ValidateData
 {
-   public boolean validateSSN(Patient patient)
+   public boolean validateSSN(String ssn)
    {
       boolean numeric =  true;
       //Checking for ssn length
-      if(patient.getSsn().length() == 9)
+      if(ssn.length() == 9)
       {
          //Check if ssn is numeric
          try
          {
-            Integer.parseInt(patient.getSsn());
+            Integer.parseInt(ssn);
 
          }catch(Exception e)
          {
@@ -26,7 +25,7 @@ public class ValidateData
          int[] index = {0,3,4,5,6,7,8};
          for(int i = 0; i < index.length; i++)
          {
-            char number = patient.getSsn().charAt(index[i]);
+            char number = ssn.charAt(index[i]);
             if((int)number == 0)
             {
                numeric = false;
@@ -41,13 +40,13 @@ public class ValidateData
       return numeric;
    }
 
-   public boolean validateName(Patient patient)
+   public boolean validateName(String name)
    {
       boolean alphabetic = true;
 
-      for(int i=0; i < patient.getName().length(); i++)
+      for(int i=0; i < name.length(); i++)
       {
-         char k = patient.getName().charAt(i);
+         char k = name.charAt(i);
          if(((int)k >= 65 && (int)k <= 90) || ((int)k >= 97 && (int)k <= 122))
          {
 
@@ -182,5 +181,81 @@ public class ValidateData
          return "Family Medicine";
       }
 
+   }
+
+   public boolean validateDate(String date)
+   {
+      //Checking if string is numeric.
+      try
+      {
+         Integer.parseInt(date);
+
+      }catch(Exception e)
+      {
+         return false;
+      }
+
+
+
+      //Checking if string has correct length YYYYMMDD
+
+      if(date.length() !=8 )
+      {
+         return false;
+      }
+      else
+      {
+
+         String year = String.valueOf(date.charAt(0));
+
+         year += String.valueOf(date.charAt(1));
+         year += String.valueOf(date.charAt(2));
+         year += String.valueOf(date.charAt(3));
+
+         String month = String.valueOf(date.charAt(4));
+
+         month += String.valueOf(date.charAt(5));
+
+         String day = String.valueOf(date.charAt(6));
+
+         day += String.valueOf(date.charAt(7));
+
+         if(Integer.valueOf(year) >= 1900 && Integer.valueOf(year) <= 2022)
+         {
+            if(Integer.valueOf(String.valueOf(date.charAt(4)))== 0)
+            {
+               if(Integer.valueOf(String.valueOf(date.charAt(5))) <=9)
+               {
+                  if(Integer.valueOf(String.valueOf(date.charAt(6))) == 0)
+                  {
+                     if(Integer.valueOf(String.valueOf(date.charAt(7))) <= 9)
+                     {
+                        return true;
+                     }
+                  }
+                  else if(Integer.valueOf(day) >= 10 && Integer.valueOf(day) <=31)
+                  {
+                    return true;
+                  }
+               }
+            }
+            else if(Integer.valueOf(month) >= 10 && Integer.valueOf(month) <=12)
+            {
+                  if(Integer.valueOf(String.valueOf(date.charAt(6))) == 0)
+                  {
+                     if(Integer.valueOf(String.valueOf(date.charAt(6))) <= 9)
+                     {
+
+                        return true;
+                     }
+                  }
+                  else if(Integer.valueOf(day) >= 10 && Integer.valueOf(day) <=31)
+                  {
+                     return true;
+                  }
+            }
+         }
+         return false;
+      }
    }
 }
