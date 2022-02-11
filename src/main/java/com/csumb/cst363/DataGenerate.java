@@ -32,7 +32,7 @@ public class DataGenerate
 
          Random street_number = new Random(1000);
 
-         Random random_quanity = new Random(100);
+         Random random_quanity = new Random(90);
 
          String[] specialties = { "Internal Medicine",
                "Family Medicine", "Pediatrics", "Orthopedics",
@@ -219,7 +219,7 @@ public class DataGenerate
                {
                   String random_drug = drug_names[gen.nextInt(drug_names.length)];
 
-                  int quantity =  street_number.nextInt(99-1+1)+1;
+                  int quantity =  street_number.nextInt(90-10+1)+10;
                   PreparedStatement prescription = con.prepareStatement(
                         "insert into Prescription(drugName, quantity, patient_ssn, patientName, doctor_ssn, doctorName, Doctor_id) values(?, ?, ?, ?, ?, ?, ?)",
                         Statement.RETURN_GENERATED_KEYS);
