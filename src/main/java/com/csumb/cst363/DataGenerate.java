@@ -17,6 +17,9 @@ public class DataGenerate
          int patient_id;
          int prescription_id;
 
+         String doctor_specialty = null;
+         String doctor_years = null;
+
          int first_three_ssn, middle_two_ssn, last_four_ssn;
 
          File name = new File("src/main/resources/names.txt");
@@ -100,6 +103,14 @@ public class DataGenerate
 
                   doctor_id = rs.getInt(1);
 
+                  Doctor doc = new Doctor();
+
+                  doc.setId(doctor_id);
+                  doc.setSsn(String.valueOf(doctor_ssn));
+                  doc.setName(doctor_name);
+                  doc.setSpecialty(random_specialty);
+                  doc.setPractice_since_year(random_date);
+
                 }
 
             }
@@ -136,19 +147,17 @@ public class DataGenerate
                String random_dt = simpleDateFormat.format(patient_dt);
 
 
-
                String doctor_ssn = null;
                String doctor = null;
 
 
                current_time.add(Calendar.YEAR, -17);
-               System.out.println(current_time.get(Calendar.YEAR) + " " + patient_birthdate.get(Calendar.YEAR));
 
                doctor_id = 0;
 
                if(patient_birthdate.get(Calendar.YEAR) >= current_time.get(Calendar.YEAR))
                {
-                  PreparedStatement ps = con.prepareStatement( "select id, ssn, name from doctor" +
+                  PreparedStatement ps = con.prepareStatement( "select id, ssn, name, specialty, practice_since_year from doctor" +
                         " where specialty = ?");
                      ps.setString(1, "Pediatrics");
 
@@ -157,11 +166,13 @@ public class DataGenerate
                         doctor_id = rs.getInt(1);
                         doctor_ssn = rs.getString(2);
                         doctor = rs.getString(3);
+                        doctor_specialty = rs.getString(4);
+                        doctor_years = rs.getString(5);
                      }
                }
                else
                {
-                  PreparedStatement ps = con.prepareStatement( "select id, ssn, name from doctor" +
+                  PreparedStatement ps = con.prepareStatement( "select id, ssn, name, specialty, practice_since_year from doctor" +
                         " where specialty = ? or specialty = ? ORDER BY RAND() LIMIT 1" );
                      ps.setString(1, "Internal Medicine");
                      ps.setString(2, "Family Medicine");
@@ -172,6 +183,8 @@ public class DataGenerate
                         doctor_id = rs.getInt(1);
                         doctor_ssn = rs.getString(2);
                         doctor = rs.getString(3);
+                        doctor_specialty = rs.getString(4);
+                        doctor_years = rs.getString(5);
                      }
                }
                //Generating random address for patient.
@@ -213,6 +226,19 @@ public class DataGenerate
                if (rs_patient.next())
                {
                   patient_id = rs_patient.getInt(1);
+
+                  Patient p = new Patient();
+                  p.setPatientId(String.valueOf(patient_id));
+                  p.setName(patient_name);
+                  p.setBirthdate(patient_name);
+                  p.setStreet(String.valueOf(street) + " " + st_name);
+                  p.setCity("San Francisco");
+                  p.setState("CA");
+                  p.setZipcode(random_zipcode);
+                  p.setPrimaryID(doctor_id);
+                  p.setPrimaryName(doctor);
+                  p.setSpecialty(doctor_specialty);
+                  p.setYears(doctor_years);
                }
 
                for(int k = 0; k < 5; k++)
@@ -230,7 +256,7 @@ public class DataGenerate
                   prescription.setString(4, patient_name);
                   prescription.setString(5, String.valueOf(doctor_ssn));
                   prescription.setString(6, doctor);
-                  prescription.setInt(7, doctor_id);
+                  prescription.setString(7, String.valueOf(doctor_id));
 
                   prescription.executeUpdate();
 
