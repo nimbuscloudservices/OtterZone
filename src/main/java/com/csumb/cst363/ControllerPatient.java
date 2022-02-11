@@ -71,12 +71,12 @@ public class ControllerPatient {
 
 			ValidateData validate = new ValidateData();
 
-			if(validate.validateSSN(patient) == false)
+			if(validate.validateSSN(patient.getSsn()) == false)
 			{
 			   model.addAttribute("message", "Invalid SSN");
             return "patient_register";
 			}
-			else if(validate.validateName(patient) == false)
+			else if(validate.validateName(patient.getName()) == false)
 			{
 			   model.addAttribute("message", "Name cannot be non-alphabetic.");
             return "patient_register";
@@ -315,7 +315,6 @@ public class ControllerPatient {
                   return "patient_edit";
                }
          }
-
 
 			int rc = ps.executeUpdate();
 
