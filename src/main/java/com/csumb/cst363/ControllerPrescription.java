@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.sql.*;
+import java.time.LocalDate;
 
 
 @Controller
@@ -50,7 +51,7 @@ public class ControllerPrescription {
 
 
       try (Connection con = getConnection();) {
-         if (!isValidDoctor(p.getDoctor_ssn(), p.getDoctorName())) {
+         if (!isValidDoctor(p.getDoctor_ssn(), p.getDoctorName(), p, model)) {
             model.addAttribute("message", "Error. Invalid Doctor Information.");
             model.addAttribute("prescription", p);
             return "prescription_create";
@@ -67,9 +68,9 @@ public class ControllerPrescription {
             model.addAttribute("prescription", p);
             return "prescription_create";
          }
-         if (p.getQuantity() > 0) {
+         if (p.getQuantity() <= 0 || p.getQuantity() > 90) {
             model.addAttribute("message", "Error. Please enter quantity " +
-                    "greater than 0.");
+                    "greater than 0 and less than 90.");
             model.addAttribute("prescription", p);
             return "prescription_create";
          }
@@ -131,12 +132,12 @@ public class ControllerPrescription {
             return "prescription_fill";
          }
 
-            //Checks to validate prescription rxid and patient
-            if (!patientHasPrescription(p, model)) {
-               model.addAttribute("message", "Prescription Not Found");
-               model.addAttribute("prescription", p);
-               return "prescription_fill";
-            }
+         //Checks to validate prescription rxid and patient
+         if (!patientHasPrescription(p, model)) {
+            model.addAttribute("message", "Prescription Not Found");
+            model.addAttribute("prescription", p);
+            return "prescription_fill";
+         }
          //Checks to validate pharmacy information, if correct data is
          // updated in prescription
          if (!verifyAndUpdatePharmacy(p, model)) {
@@ -144,7 +145,12 @@ public class ControllerPrescription {
             model.addAttribute("prescription", p);
             return "prescription_fill";
          }
-         fillPrescription(p, model);
+         if (!fillPrescription(p, model)) {
+            model.addAttribute("message", "Error Unable to fill prescription.");
+            model.addAttribute("prescription", p);
+            return "prescription_fill";
+         }
+         ;
       } catch (SQLException e) {
          e.printStackTrace();
       }
@@ -160,19 +166,38 @@ public class ControllerPrescription {
     */
    private boolean fillPrescription(Prescription p, Model model) {
       try (Connection con = getConnection();) {
+         PreparedStatement prescription = con.prepareStatement("SELECT * from" +
+                 " Prescription WHERE rxid = ? AND patientName = ?");
+         prescription.setInt(1, Integer.parseInt(p.getRxid()));
+         prescription.setString(2, p.getPatientName());
+         ResultSet rs = prescription.executeQuery();
+         if (rs.next()) {
+            String drug_name = rs.getString("drugName");
+            int quantity = rs.getInt("quantity");
+            String patient_ssn = rs.getString("patient_ssn");
+            String patient_name = rs.getString("patientName");
+            String doc_name = rs.getString("doctor_ssn");
+            String doc_ssn = rs.getString("doctorName");
+            p.setDrugName(drug_name);
+            p.setQuantity(quantity);
+            p.setPatientName(patient_name);
+            p.setPatient_ssn(patient_ssn);
+            p.setDoctorName(doc_name);
+            p.setDoctor_ssn(doc_ssn);
+            p.setDateFilled(String.valueOf(LocalDate.now()));
+            PreparedStatement fill = con.prepareStatement("INSERT INTO " +
+                    "Pharmacy_has_Prescription(Pharmacy_pharmacyID, " +
+                    "Prescription_rxid, cost, quantity, fillDate) VALUES (?, " +
+                    "?, ?, ?, ?)");
+            fill.setInt(1, Integer.parseInt(p.getPharmacyID()));
+            fill.setInt(2, Integer.parseInt(p.getRxid()));
+            fill.setDouble(3, calculateCost(p, model));
+            fill.setInt(4, p.getQuantity());
+            fill.setDate(5, Date.valueOf(p.getDateFilled()));
+            fill.executeUpdate();
 
-         PreparedStatement fill = con.prepareStatement("INSERT INTO " +
-                 "Pharmacy_has_Prescription(Pharmacy_pharmacyID, " +
-                 "Prescription_rxid, " +
-                 "pharmacyAddress, pharmacyPhone, pharmacyName, dateFilled, " +
-                 "cost) VALUES (?, ?, ?, ?, ?, ?, ?)");
-         fill.setInt(1, Integer.parseInt(p.getPharmacyID()));
-         fill.setInt(2, Integer.parseInt(p.getRxid()));
-         fill.setString(3, p.getPharmacyAddress());
-         fill.setString(4, p.getPharmacyPhone());
-         fill.setString(5, p.getPharmacyName());
-         fill.setDouble(6, calculateCost(p, model));
-
+            return true;
+         }
       } catch (SQLException e) {
          model.addAttribute("message", "SQL Error: " + e.getMessage());
          model.addAttribute("prescription", p);
@@ -197,14 +222,21 @@ public class ControllerPrescription {
     * @param name       doctors name
     * @return true if doctor information matches DB, false if not
     */
-   private boolean isValidDoctor(String doctor_ssn, String name) {
+   private boolean isValidDoctor(String doctor_ssn, String name,
+                                 Prescription p, Model model) {
       try (Connection con = getConnection();) {
          PreparedStatement ps = con.prepareStatement("SELECT name, ssn from " +
                  "doctor where name = ? and ssn = ?");
          ps.setString(1, name);
          ps.setInt(2, Integer.parseInt(doctor_ssn));
          ResultSet rs = ps.executeQuery();
-         if (rs.next()) return rs.next();
+         if (rs.next()) {
+            if (doctor_ssn.equals(rs.getString("ssn")) && name.equals(rs.getString("name"))) {
+               p.setDoctorName(rs.getString("name"));
+               return true;
+            }
+         }
+
       } catch (SQLException e) {
          e.printStackTrace();
          return false;
@@ -250,13 +282,12 @@ public class ControllerPrescription {
     */
    private boolean isValidDrug(String drug) {
       try (Connection con = getConnection();) {
-         PreparedStatement ps = con.prepareStatement("SELECT trade_name from " +
-                 "drug where trade_name LIKE ?");
+         PreparedStatement ps = con.prepareStatement("SELECT drugName from " +
+                 "drug where drug.drugName LIKE ?");
          ps.setString(1, "%" + drug + "%");
          ResultSet rs = ps.executeQuery();
          if (rs.next()) {
-            String drug_name = rs.getString("trade_name");
-
+            String drug_name = rs.getString("drugNAme");
             return drug.equals(drug_name);
          }
       } catch (SQLException e) {
@@ -266,6 +297,13 @@ public class ControllerPrescription {
       return false;
    }
 
+   /**
+    * Verifies if this form is filled
+    *
+    * @param p     this presciption
+    * @param model this model
+    * @return true if form filled, false if not.
+    */
    private boolean isFormFilled(Prescription p, Model model) {
       String rxid = p.getRxid();
       String pharm_name = p.getPharmacyName();
@@ -283,9 +321,16 @@ public class ControllerPrescription {
       return true;
    }
 
+   /**
+    * Verifies patient rxid and
+    *
+    * @param p
+    * @param model
+    * @return
+    */
    private boolean patientHasPrescription(Prescription p, Model model) {
       try (Connection con = getConnection();) {
-         String query = "SELECT rxid, patientName " +
+         String query = "SELECT * " +
                  "from Prescription where rxid = ? AND " +
                  "patientName = ?";
          PreparedStatement ps = con.prepareStatement(query);
@@ -295,6 +340,7 @@ public class ControllerPrescription {
          if (rs.next()) {
             String rxid_db = rs.getString("rxid");
             String name_db = rs.getString("patientName");
+
             return rxid_db.equals(p.getRxid()) && name_db.equals(p.getPatientName());
          }
       } catch (SQLException e) {
@@ -316,11 +362,11 @@ public class ControllerPrescription {
                  "name, street, city, state, zip, phone " +
                  "from Pharmacy where name LIKE ? AND street LIKE ? AND city " +
                  "LIKE ? AND state = ? AND zip LIKE ?");
-         ps.setString(1, "%" + pharm_name + "%");
-         ps.setString(2, "%" + pharm_street + "%");
-         ps.setString(3, "%" + pharm_city + "%");
-         ps.setString(4, "%" + pharm_state + "%");
-         ps.setString(5, "%" + pharm_zip + "%");
+         ps.setString(1, pharm_name + "%");
+         ps.setString(2, pharm_street + "%");
+         ps.setString(3, pharm_city + "%");
+         ps.setString(4, pharm_state);
+         ps.setString(5, pharm_zip + "%");
 
          ResultSet rs = ps.executeQuery();
          if (rs.next()) {
@@ -330,6 +376,7 @@ public class ControllerPrescription {
             p.setPharmacyCity(pharm_city);
             p.setPharmacyState(pharm_state);
             p.setPharmacyZip(pharm_zip);
+            p.setPharmacyPhone(rs.getString("phone"));
             p.setPharmacyAddress();
             return true;
          }
@@ -349,23 +396,22 @@ public class ControllerPrescription {
       double cost = 0;
       try (Connection con = getConnection();) {
          PreparedStatement trade_name_to_drugID = con.prepareStatement(
-                 "SELECT drug_id from drug where trade_name = ?");
+                 "SELECT idDrug from drug where drugName = ?");
          trade_name_to_drugID.setString(1, p.getDrugName());
          ResultSet drugID = trade_name_to_drugID.executeQuery();
 
          if (drugID.next()) {
-            id = drugID.getInt("drug_id");
+            id = drugID.getInt("idDrug");
          }
 
          PreparedStatement ps = con.prepareStatement("SELECT " +
-                 "Pharmacy_idPharmacy, Drug_idDrug, quantity, cost from " +
-                 "Pharmacy_has_Drug WHERE Pharmacy_idPharmacy = ? AND " +
-                 "Drug_idDrug = ? ");
+                 "PharmacyID, idDrug, quantity, cost from " +
+                 "Pharmacy_has_Drug WHERE PharmacyID = ? AND " +
+                 "idDrug = ? ");
          ps.setString(1, p.getPharmacyID());
          ps.setInt(2, id);
          ResultSet getCost = ps.executeQuery();
-         if(getCost.next())
-         {
+         if (getCost.next()) {
             cost = getCost.getDouble("cost") * p.getQuantity();
             p.setCost(String.format("%.2f", cost));
             return cost;
@@ -374,7 +420,7 @@ public class ControllerPrescription {
          e.printStackTrace();
          model.addAttribute("message", "Error, Couldn't calculate cost.");
          model.addAttribute("prescription", p);
-         return 0;
+
       }
       return 0;
    }
