@@ -44,9 +44,9 @@ public class DataGenerate
 
          String[] zipcodes = {"94016", "94102", "94103", "94104", "94110", "94117"};
 
-         String[] drug_names = {"Cerdelga", "Tegsedi", "Adderall", "Celexa", "Femara", "Briviact", "Ritalin",
-               "Tembexa", "Prolia" , "Otezla", "Dupixent", "Cibinqo", "Amevive", "Cleviprex" , "Juxtapid",
-               "Cholbam", "Dificid", "Edluar", "Fetzima", "Verzenio"};
+         String[] drug_names = {"Accuneb", "Fosamax", "Zyloprim", "Xanax", "Elavil", "Augmentin", "Amoxil",
+               "Adderall XR", "Tenormin" , "Lipitor", "Zithromax", "Lotrel", "Soma", "Coreg" , "Omnicef",
+               "Celebrex", "Keflex", "Celexa", "Tylenol with Codeine", "Proair Proventil"};
 
          int[] birth_year = {1980, 1985, 1990, 1995, 2000};
 
