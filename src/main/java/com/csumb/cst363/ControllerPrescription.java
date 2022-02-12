@@ -189,9 +189,10 @@ public class ControllerPrescription {
                     "Pharmacy_has_Prescription(Pharmacy_pharmacyID, " +
                     "Prescription_rxid, cost, quantity, fillDate) VALUES (?, " +
                     "?, ?, ?, ?)");
+            Double cost_calc = calculateCost(p, model);
             fill.setInt(1, Integer.parseInt(p.getPharmacyID()));
             fill.setInt(2, Integer.parseInt(p.getRxid()));
-            fill.setDouble(3, calculateCost(p, model));
+            fill.setDouble(3, cost_calc);
             fill.setInt(4, p.getQuantity());
             fill.setDate(5, Date.valueOf(p.getDateFilled()));
             fill.executeUpdate();
@@ -300,7 +301,7 @@ public class ControllerPrescription {
    /**
     * Verifies if this form is filled
     *
-    * @param p     this presciption
+    * @param p     this prescription
     * @param model this model
     * @return true if form filled, false if not.
     */
@@ -322,11 +323,11 @@ public class ControllerPrescription {
    }
 
    /**
-    * Verifies patient rxid and
+    * Verifies patient rxid and patient name
     *
-    * @param p
-    * @param model
-    * @return
+    * @param p     prescription
+    * @param model this model
+    * @return true if matches db false if not.
     */
    private boolean patientHasPrescription(Prescription p, Model model) {
       try (Connection con = getConnection();) {
@@ -351,6 +352,13 @@ public class ControllerPrescription {
       return false;
    }
 
+   /**
+    * Verifies pharmacy information matches db
+    *
+    * @param p     this prescription
+    * @param model this model
+    * @return true if matches, false if not
+    */
    private boolean verifyAndUpdatePharmacy(Prescription p, Model model) {
       try (Connection con = getConnection();) {
          String pharm_name = p.getPharmacyName();
@@ -391,6 +399,13 @@ public class ControllerPrescription {
       return false;
    }
 
+   /**
+    * Helper method to calculate cost of prescription
+    *
+    * @param p     this prescription
+    * @param model this model
+    * @return total cost of this prescription.
+    */
    private double calculateCost(Prescription p, Model model) {
       int id = Integer.MIN_VALUE;
       double cost = 0;
@@ -415,6 +430,8 @@ public class ControllerPrescription {
             cost = getCost.getDouble("cost") * p.getQuantity();
             p.setCost(String.format("%.2f", cost));
             return cost;
+         } else {
+            return Double.MIN_VALUE;
          }
       } catch (SQLException e) {
          e.printStackTrace();

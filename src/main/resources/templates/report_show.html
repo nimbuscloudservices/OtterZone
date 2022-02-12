@@ -8,20 +8,21 @@
     <span th:text="${message}"></span>
 </p>
 <div th:object="${Report}">
-    table>
-    <thead>
-    <tr>
-        <th>Doctor</th>
-        <th>Drug</th>
-        <th>Quantity</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="customer : ${customers}">
-        <td th:text="${customer.id}">&nbsp;</td>
-        <td th:text="${customer.name}">&nbsp;</td>
-    </tr>
-    </tbody>
+    <table>
+        <thead>
+        <tr>
+            <th th:each="header : ${tableHeader}">
+                <th:block th:text="${header}"/>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${tableContent}">
+            <td th:each="item : ${row}">
+                <th:block th:text="${item}"/>
+            </td>
+        </tr>
+        </tbody>
     </table>
 
     <p>
