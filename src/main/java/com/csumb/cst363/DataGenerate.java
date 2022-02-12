@@ -230,7 +230,7 @@ public class DataGenerate
                   patient_id = rs_patient.getInt(1);
 
                   Patient p = new Patient();
-                  p.setPatientId(String.valueOf(patient_id));
+                  p.setPatientId(patient_id);
                   p.setName(patient_name);
                   p.setBirthdate(patient_name);
                   p.setStreet(String.valueOf(street) + " " + st_name);
