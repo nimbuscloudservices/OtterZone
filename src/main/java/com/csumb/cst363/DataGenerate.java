@@ -44,9 +44,9 @@ public class DataGenerate
 
          String[] zipcodes = {"94016", "94102", "94103", "94104", "94110", "94117"};
 
-         String[] drug_names = {"Cerdelga", "Tegsedi", "Adderall", "Celexa", "Femara", "Briviact", "Ritalin",
-               "Tembexa", "Prolia" , "Otezla", "Dupixent", "Cibinqo", "Amevive", "Cleviprex" , "Juxtapid",
-               "Cholbam", "Dificid", "Edluar", "Fetzima", "Verzenio"};
+         String[] drug_names = {"Accuneb", "Fosamax", "Zyloprim", "Xanax", "Elavil", "Augmentin", "Amoxil",
+               "Adderall XR", "Tenormin" , "Lipitor", "Zithromax", "Lotrel", "Soma", "Coreg" , "Omnicef",
+               "Celebrex", "Keflex", "Celexa", "Tylenol with Codeine", "Proair Proventil"};
 
          int[] birth_year = {1980, 1985, 1990, 1995, 2000};
 
@@ -155,6 +155,7 @@ public class DataGenerate
 
                doctor_id = 0;
 
+               //Getting correct doctor according to date of birth
                if(patient_birthdate.get(Calendar.YEAR) >= current_time.get(Calendar.YEAR))
                {
                   PreparedStatement ps = con.prepareStatement( "select id, ssn, name, specialty, practice_since_year from doctor" +
@@ -205,6 +206,7 @@ public class DataGenerate
                   st_name = st.nextLine();
                }
 
+               //Random zipcode
                String random_zipcode = zipcodes[gen.nextInt(zipcodes.length)];
 
                PreparedStatement patient = con.prepareStatement(
@@ -228,7 +230,7 @@ public class DataGenerate
                   patient_id = rs_patient.getInt(1);
 
                   Patient p = new Patient();
-                  p.setPatientId(Integer.parseInt(String.valueOf(patient_id)));
+                  p.setPatientId(patient_id);
                   p.setName(patient_name);
                   p.setBirthdate(patient_name);
                   p.setStreet(String.valueOf(street) + " " + st_name);
@@ -240,12 +242,14 @@ public class DataGenerate
                   p.setSpecialty(doctor_specialty);
                   p.setYears(doctor_years);
                }
-
+               //Generating 5000 prescription (5 prescriptions per patient)
                for(int k = 0; k < 5; k++)
                {
+                  //Random drug.
                   String random_drug = drug_names[gen.nextInt(drug_names.length)];
 
-                  int quantity =  street_number.nextInt(90-10+1)+10;
+                  //Random quantity
+                  int quantity =  random_quanity.nextInt(90-10+1)+10;
                   PreparedStatement prescription = con.prepareStatement(
                         "insert into Prescription(drugName, quantity, patient_ssn, patientName, doctor_ssn, doctorName, Doctor_id) values(?, ?, ?, ?, ?, ?, ?)",
                         Statement.RETURN_GENERATED_KEYS);
