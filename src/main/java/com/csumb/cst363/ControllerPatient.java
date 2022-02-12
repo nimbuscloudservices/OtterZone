@@ -28,119 +28,119 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class ControllerPatient {
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+   @Autowired
+   private JdbcTemplate jdbcTemplate;
 
-	/*
-	 * Request patient_register form.
-	 */
-	@GetMapping("/patient/new")
-	public String newPatient(Model model) {
-		// return blank form for new patient registration
-		model.addAttribute("patient", new Patient());
-		return "patient_register";
-	}
+   /*
+    * Request patient_register form.
+    */
+   @GetMapping("/patient/new")
+   public String newPatient(Model model) {
+      // return blank form for new patient registration
+      model.addAttribute("patient", new Patient());
+      return "patient_register";
+   }
 
-	/*
-	 * Request form to search for patient.
-	 */
-	@GetMapping("/patient/edit")
-	public String getPatientForm(Model model) {
-		// prompt for patient id and name
-		return "patient_get";
-	}
+   /*
+    * Request form to search for patient.
+    */
+   @GetMapping("/patient/edit")
+   public String getPatientForm(Model model) {
+      // prompt for patient id and name
+      return "patient_get";
+   }
 
-	/*
-	 * Process a form to create new patient.
-	 */
-	@PostMapping("/patient/new")
-	public String newPatient(Patient patient, Model model) {
+   /*
+    * Process a form to create new patient.
+    */
+   @PostMapping("/patient/new")
+   public String newPatient(Patient patient, Model model) {
 
-		try (Connection con = getConnection();) {
+      try (Connection con = getConnection();) {
 
-			PreparedStatement ps = con.prepareStatement("insert into patient(ssn, name, birthdate, street, city, state, zipcode, primaryName ) values(?, ?, ?, ?, ?, ?, ?, ?)",
-					Statement.RETURN_GENERATED_KEYS);
-			ps.setString(1, patient.getSsn());
-			ps.setString(2, patient.getName());
-			ps.setString(3, patient.getBirthdate());
-			ps.setString(4, patient.getStreet());
-			ps.setString(5, patient.getCity());
-			ps.setString(6, patient.getState());
-			ps.setString(7, patient.getZipcode());
-			ps.setString(8, patient.getPrimaryName());
+         PreparedStatement ps = con.prepareStatement("insert into patient(ssn, name, birthdate, street, city, state, zipcode, primaryName ) values(?, ?, ?, ?, ?, ?, ?, ?)",
+               Statement.RETURN_GENERATED_KEYS);
+         ps.setString(1, patient.getSsn());
+         ps.setString(2, patient.getName());
+         ps.setString(3, patient.getBirthdate());
+         ps.setString(4, patient.getStreet());
+         ps.setString(5, patient.getCity());
+         ps.setString(6, patient.getState());
+         ps.setString(7, patient.getZipcode());
+         ps.setString(8, patient.getPrimaryName());
 
-			ValidateData validate = new ValidateData();
+         ValidateData validate = new ValidateData();
 
-			if(validate.validateSSN(patient.getSsn()) == false)
-			{
-			   model.addAttribute("message", "Invalid SSN");
+         if(!validate.validateSSN(patient.getSsn()))
+         {
+            model.addAttribute("message", "Enter a valid SSN.");
             return "patient_register";
-			}
-			else if(validate.validateName(patient.getName()) == false)
-			{
-			   model.addAttribute("message", "Name cannot be non-alphabetic.");
+         }
+         else if(!validate.validateName(patient.getName()))
+         {
+            model.addAttribute("message", "Enter a valid name (alphabetic).");
             return "patient_register";
-			}
-			else if(patient.getBirthdate().isEmpty())
-			{
-			   model.addAttribute("message", "Enter a valid date of birth.");
+         }
+         else if(patient.getBirthdate().isEmpty())
+         {
+            model.addAttribute("message", "Enter a valid date of birth.");
             return "patient_register";
-			}
-			else if(validate.validateStreet(patient) == false)
-			{
-			   model.addAttribute("message", "Street cannot be non-alphabetic or non-numeric.");
+         }
+         else if(!validate.validateStreet(patient.getStreet()))
+         {
+            model.addAttribute("message", "Enter a valid street.");
             return "patient_register";
-			}
-			else if(validate.validateCity(patient) == false)
-			{
-			   model.addAttribute("message", "City cannot be non-alphabetic");
+         }
+         else if(!validate.validateName(patient.getCity()))
+         {
+            model.addAttribute("message", "Enter a valid city.");
             return "patient_register";
-			}
-			else if(validate.validateState(patient) == false)
-			{
-			   model.addAttribute("message", "State cannot be non-alphabetic");
+         }
+         else if(!validate.validateName(patient.getState()))
+         {
+            model.addAttribute("message", "Enter a valid state.");
             return "patient_register";
-			}
-			else if(validate.validateZipcode(patient) == false)
-			{
-			   model.addAttribute("message", "Zipcode must be 5 or 9 digits long.");
+         }
+         else if(!validate.validateZipcode(patient.getZipcode()))
+         {
+            model.addAttribute("message", "Enter a valid zipcode (5 or 9 digits).");
             return "patient_register";
-			}
+         }
 
 
-			if(validate.getCorrectDoctor(patient) == "Pediatrics")
-			{
-			   //Checking for doctor
-	         PreparedStatement cd = con.prepareStatement("select name from doctor where name =  ? AND specialty = ?");
+         if(validate.getCorrectDoctor(patient) == "Pediatrics")
+         {
+            //Checking for doctor
+            PreparedStatement cd = con.prepareStatement("select name from doctor where name =  ? AND specialty = ?");
 
-	            cd.setString(1, patient.getPrimaryName());
-	            cd.setString(2, "Pediatrics");
+               cd.setString(1, patient.getPrimaryName());
+               cd.setString(2, "Pediatrics");
 
-	            ResultSet rs = cd.executeQuery();
+               ResultSet rs = cd.executeQuery();
 
                if (!rs.next()) {
                   model.addAttribute("message", "Please select the correct primary doctor");
                   return "patient_register";
                }
-			}
-			else
-			{
-			   //Checking for doctor
-	         PreparedStatement cd = con.prepareStatement("select name from doctor where name =  ? AND specialty IN (?, ?)");
+         }
+         else
+         {
+            //Checking for doctor
+            PreparedStatement cd = con.prepareStatement("select name from doctor where name =  ? AND specialty IN (?, ?)");
 
-	            cd.setString(1, patient.getPrimaryName());
-	            cd.setString(2, "Family Medicine");
-	            cd.setString(3, "Internal Medicine");
+               cd.setString(1, patient.getPrimaryName());
+               cd.setString(2, "Family Medicine");
+               cd.setString(3, "Internal Medicine");
 
-	            ResultSet rs = cd.executeQuery();
+               ResultSet rs = cd.executeQuery();
 
-	            if (!rs.next()) {
-	               model.addAttribute("message", "Please select the correct primary doctor");
+               if (!rs.next()) {
+                  model.addAttribute("message", "Please select the correct primary doctor");
                   return "patient_register";
-	            }
-			}
+               }
+         }
 
-			ps.executeUpdate();
+         ps.executeUpdate();
          ResultSet rs = ps.getGeneratedKeys();
          if (rs.next()) patient.setPatientId(rs.getString(1));
 
@@ -150,141 +150,136 @@ public class ControllerPatient {
          return "patient_show";
 
 
-		} catch (SQLException e) {
-			model.addAttribute("message", "SQL Error."+e.getMessage());
-			model.addAttribute("patient", patient);
-			return "patient_show";
+      } catch (SQLException e) {
+         model.addAttribute("message", "SQL Error."+e.getMessage());
+         model.addAttribute("patient", patient);
+         return "patient_show";
 
-		}
+      }
 
-	}
+   }
 
-	/*
-	 * Search for patient by patient id and name.
-	 */
-	@PostMapping("/patient/show")
-	public String getPatientForm(Patient patient, @RequestParam("patientId") int patientId, @RequestParam("name") String name,
-			Model model) {
+   /*
+    * Search for patient by patient id and name.
+    */
+   @PostMapping("/patient/show")
+   public String getPatientForm(Patient patient, @RequestParam("patientId") int patientId, @RequestParam("name") String name,
+         Model model) {
 
-		try (Connection con = getConnection();) {
+      try (Connection con = getConnection();) {
+         PreparedStatement ps = con.prepareStatement("select patientId, name, birthdate, street, city, state, zipcode, primaryName from patient where patientId=? and name=?");
+         ps.setString(1, patient.getPatientId());
+         ps.setString(2, patient.getName());
 
-			System.out.println("start getDoctor " + patient);
-			PreparedStatement ps = con.prepareStatement("select patientId, name, birthdate, street, city, state, zipcode, primaryName from patient where patientId=? and name=?");
-			ps.setString(1, patient.getPatientId());
-			ps.setString(2, patient.getName());
+         ResultSet rs = ps.executeQuery();
+         if (rs.next()) {
+            patient.setPatientId(rs.getString(1));
+            patient.setName(rs.getString(2));
+            patient.setBirthdate(rs.getString(3));
+            patient.setStreet(rs.getString(4));
+            patient.setCity(rs.getString(5));
+            patient.setState(rs.getString(6));
+            patient.setZipcode(rs.getString(7));
+            patient.setPrimaryName(rs.getString(8));
 
-			ResultSet rs = ps.executeQuery();
-			if (rs.next()) {
-				patient.setPatientId(rs.getString(1));
-				patient.setName(rs.getString(2));
-				patient.setBirthdate(rs.getString(3));
-				patient.setStreet(rs.getString(4));
-				patient.setCity(rs.getString(5));
-				patient.setState(rs.getString(6));
-				patient.setZipcode(rs.getString(7));
-				patient.setPrimaryName(rs.getString(8));
+            model.addAttribute("patient", patient);
+            return "patient_show";
 
-				model.addAttribute("patient", patient);
-				// for DEBUG
-				System.out.println("end getDoctor " + patient);
-				return "patient_show";
+         } else {
+            model.addAttribute("message", "Patient not found.");
+            return "patient_get";
+         }
 
-			} else {
-				model.addAttribute("message", "Patient not found.");
-				return "patient_get";
-			}
-
-		} catch (SQLException e) {
-			System.out.println("SQL error in getPatient "+e.getMessage());
-			model.addAttribute("message", "SQL Error."+e.getMessage());
-			model.addAttribute("doctor", patient);
-			return "patient_show";
-		}
-	}
+      } catch (SQLException e) {
+         model.addAttribute("message", "SQL Error."+e.getMessage());
+         model.addAttribute("doctor", patient);
+         return "patient_show";
+      }
+   }
 
 
-	/*
-	 * Search for patient by patient id.
-	 */
-	@GetMapping("/patient/edit/{patientId}")
-	public String updatePatient(@PathVariable int patientId, Model model) {
+   /*
+    * Search for patient by patient id.
+    */
+   @GetMapping("/patient/edit/{patientId}")
+   public String updatePatient(@PathVariable int patientId, Model model) {
 
-		Patient patient = new Patient();
-		patient.setPatientId(String.valueOf(patientId));
-		try (Connection con = getConnection();) {
+      Patient patient = new Patient();
+      patient.setPatientId(String.valueOf(patientId));
+      try (Connection con = getConnection();) {
 
-			PreparedStatement ps = con.prepareStatement("select patientId, name, birthdate, street, city, state, zipcode, primaryName from patient where patientId=?");
-			ps.setInt(1,  patientId);
+         PreparedStatement ps = con.prepareStatement("select patientId, name, birthdate, street, city, state, zipcode, primaryName from patient where patientId=?");
+         ps.setInt(1,  patientId);
 
-			ResultSet rs = ps.executeQuery();
-			if (rs.next()) {
-				patient.setPatientId(rs.getString(1));
-				patient.setName(rs.getString(2));
-				patient.setBirthdate(rs.getString(3));
-				patient.setStreet(rs.getString(4));
-				patient.setCity(rs.getString(5));
-				patient.setState(rs.getString(6));
-				patient.setZipcode(rs.getString(7));
-				patient.setPrimaryName(rs.getString(8));
+         ResultSet rs = ps.executeQuery();
+         if (rs.next()) {
+            patient.setPatientId(rs.getString(1));
+            patient.setName(rs.getString(2));
+            patient.setBirthdate(rs.getString(3));
+            patient.setStreet(rs.getString(4));
+            patient.setCity(rs.getString(5));
+            patient.setState(rs.getString(6));
+            patient.setZipcode(rs.getString(7));
+            patient.setPrimaryName(rs.getString(8));
 
-				model.addAttribute("patient", patient);
-				return "patient_edit";
-			} else {
-				model.addAttribute("message", "Patient not found.");
-				model.addAttribute("patient", patient);
-				return "patient_get";
-			}
-
-		} catch (SQLException e) {
-			model.addAttribute("message", "SQL Error."+e.getMessage());
-			model.addAttribute("patient", patient);
-			return "patient_get";
-
-		}
-
-	}
-
-
-	/*
-	 * Process changes to patient address and primary doctor
-	 */
-	@PostMapping("/patient/edit")
-	public String updatePatient(Patient patient, Model model) {
-
-		try (Connection con = getConnection();) {
-
-			PreparedStatement ps = con.prepareStatement("update patient set street=?, city=?, state=?, zipcode=?, primaryName=? where patientId=?");
-			ps.setString(1,  patient.getStreet());
-			ps.setString(2,  patient.getCity());
-			ps.setString(3,  patient.getState());
-			ps.setString(4,  patient.getZipcode());
-			ps.setString(5,  patient.getPrimaryName());
-			ps.setString(6,  patient.getPatientId());
-
-			ValidateData validate = new ValidateData();
-
-			if(!validate.validateStreet(patient))
-			{
-			   model.addAttribute("message", "Street cannot be non-alphabetic or non-numeric.");
+            model.addAttribute("patient", patient);
             return "patient_edit";
-			}
-			else if(!validate.validateCity(patient))
-			{
-			   model.addAttribute("message", "City cannot be non-alphabetic");
-            return "patient_edit";
-			}
-			else if(!validate.validateState(patient))
-			{
-			   model.addAttribute("message", "State cannot be non-alphabetic");
-            return "patient_edit";
-			}
-			else if(!validate.validateZipcode(patient))
-			{
-			   model.addAttribute("message", "Zipcode must be 5 or 9 digits long.");
-            return "patient_edit";
-			}
+         } else {
+            model.addAttribute("message", "Patient not found.");
+            model.addAttribute("patient", patient);
+            return "patient_get";
+         }
 
-			if(validate.getCorrectDoctor(patient) == "Pediatrics")
+      } catch (SQLException e) {
+         model.addAttribute("message", "SQL Error."+e.getMessage());
+         model.addAttribute("patient", patient);
+         return "patient_get";
+
+      }
+
+   }
+
+
+   /*
+    * Process changes to patient address and primary doctor
+    */
+   @PostMapping("/patient/edit")
+   public String updatePatient(Patient patient, Model model) {
+
+      try (Connection con = getConnection();) {
+
+         PreparedStatement ps = con.prepareStatement("update patient set street=?, city=?, state=?, zipcode=?, primaryName=? where patientId=?");
+         ps.setString(1,  patient.getStreet());
+         ps.setString(2,  patient.getCity());
+         ps.setString(3,  patient.getState());
+         ps.setString(4,  patient.getZipcode());
+         ps.setString(5,  patient.getPrimaryName());
+         ps.setString(6,  patient.getPatientId());
+
+         ValidateData validate = new ValidateData();
+
+         if(!validate.validateStreet(patient.getStreet()))
+         {
+            model.addAttribute("message", "Street cannot be non-alphabetic or non-numeric.");
+            return "patient_edit";
+         }
+         else if(!validate.validateName(patient.getCity()))
+         {
+            model.addAttribute("message", "City cannot be non-alphabetic");
+            return "patient_edit";
+         }
+         else if(!validate.validateName(patient.getState()))
+         {
+            model.addAttribute("message", "State cannot be non-alphabetic");
+            return "patient_edit";
+         }
+         else if(!validate.validateZipcode(patient.getZipcode()))
+         {
+            model.addAttribute("message", "Zipcode must be 5 or 9 digits long.");
+            return "patient_edit";
+         }
+
+         if(validate.getCorrectDoctor(patient) == "Pediatrics")
          {
             //Checking for doctor
             PreparedStatement cd = con.prepareStatement("select name from doctor where name =  ? AND specialty = ?");
@@ -316,34 +311,34 @@ public class ControllerPatient {
                }
          }
 
-			int rc = ps.executeUpdate();
+         int rc = ps.executeUpdate();
 
-			if (rc==1) {
-				model.addAttribute("message", "Update successful");
-				model.addAttribute("patient", patient);
-				return "patient_show";
+         if (rc==1) {
+            model.addAttribute("message", "Update successful");
+            model.addAttribute("patient", patient);
+            return "patient_show";
 
-			}else {
-				model.addAttribute("message", "Error. Update was not successful");
-				model.addAttribute("patient", patient);
-				return "patient_edit";
-			}
+         }else {
+            model.addAttribute("message", "Error. Update was not successful");
+            model.addAttribute("patient", patient);
+            return "patient_edit";
+         }
 
-		} catch (SQLException e) {
-			model.addAttribute("message", "SQL Error."+e.getMessage());
-			model.addAttribute("patient", patient);
-			return "patient_edit";
-		}
+      } catch (SQLException e) {
+         model.addAttribute("message", "SQL Error."+e.getMessage());
+         model.addAttribute("patient", patient);
+         return "patient_edit";
+      }
 
-	}
+   }
 
-	/*
-	 * return JDBC Connection using jdbcTemplate in Spring Server
-	 */
+   /*
+    * return JDBC Connection using jdbcTemplate in Spring Server
+    */
 
-	private Connection getConnection() throws SQLException {
-		Connection conn = jdbcTemplate.getDataSource().getConnection();
-		return conn;
-	}
+   private Connection getConnection() throws SQLException {
+      Connection conn = jdbcTemplate.getDataSource().getConnection();
+      return conn;
+   }
 
 }

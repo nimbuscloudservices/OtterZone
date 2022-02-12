@@ -6,144 +6,121 @@ import java.util.Date;
 
 public class ValidateData
 {
+   /*
+    * validateSSN checks for a valid SSN input from user.
+    *
+    */
    public boolean validateSSN(String ssn)
    {
-      boolean numeric =  true;
-      //Checking for ssn length
+      //Checking for SSN length.
       if(ssn.length() == 9)
       {
-         //Check if ssn is numeric
+         //Check if SSN is numeric.
          try
          {
             Integer.parseInt(ssn);
 
          }catch(Exception e)
          {
-            numeric = false;
+            return false;
          }
 
-         int[] index = {0,3,4,5,6,7,8};
-         for(int i = 0; i < index.length; i++)
+         //Checking if SSN starts with a 0 or 9. If middle two digits are 00.
+         //If last four digits are 0000.
+         if((int)ssn.charAt(0) == 48 || (int)ssn.charAt(0) == 57)
          {
-            char number = ssn.charAt(index[i]);
-            if((int)number == 0)
-            {
-               numeric = false;
-            }
+            return false;
+         }
+         else if((int)ssn.charAt(3) == 48 && (int)ssn.charAt(4) == 48)
+         {
+           return false;
+         }
+         else if(((int)ssn.charAt(5) == 48 && (int)ssn.charAt(6) == 48) && ((int)ssn.charAt(7) == 48 && (int)ssn.charAt(8) == 48))
+         {
+            return false;
+         }
+         else
+         {
+            return true;
          }
       }
       else
       {
-        numeric = false;
+        return false;
       }
-
-      return numeric;
    }
 
+   /*
+    * validateName checks if name is alphabetic.
+    */
    public boolean validateName(String name)
    {
-      boolean alphabetic = true;
-
-      for(int i=0; i < name.length(); i++)
+      if(name.isEmpty() || name.length() < 2)
       {
-         char k = name.charAt(i);
-         if(((int)k >= 65 && (int)k <= 90) || ((int)k >= 97 && (int)k <= 122))
+         return false;
+      }
+      else
+      {
+         for(int i=0; i < name.length(); i++)
          {
-
-         }
-         else if((int)k == 32)
-         {
-
-         }
-         else
-         {
-            return false;
+            char k = name.charAt(i);
+            if( ((int)k < 65 && (int)k != 32 ) || ((int)k > 122) )
+            {
+               return false;
+            }
+            else if( ((int)k > 90 && (int)k < 97) )
+            {
+               return false;
+            }
          }
       }
 
-      return alphabetic;
+      return true;
    }
 
-   public boolean validateStreet(Patient patient)
+   /*
+    * validateStreet checks if street does not contain special characters (e.g @ ! & $ %)
+    */
+   public boolean validateStreet(String street)
    {
-      boolean isValid = true;
-      //Checking for street
-      for(int i=0; i<patient.getStreet().length(); i++)
+      if(street.isEmpty())
       {
-         char k = patient.getStreet().charAt(i);
-         if(((int)k >= 65 && (int)k <= 90) || ((int)k >= 97 && (int)k <= 122))
+         return false;
+      }
+      else
+      {
+         for(int i=0; i < street.length(); i++)
          {
+            char k = street.charAt(i);
 
-         }
-         else if((((int)k == 32) && i!=0) || ((int)k >=48 && (int)k <=57) )
-         {
-
-         }
-         else
-         {
-            return false;
+            if( i == 0 && ((int)k == 32) )
+            {
+               return false;
+            }
+            else if( ((int)k < 48 && (int)k != 32) || (int)k > 122)
+            {
+               return false;
+            }
+            if( ((int)k > 57 && (int)k < 65) || ((int)k > 90 && (int)k < 97))
+            {
+               return false;
+            }
          }
       }
-
-      return isValid;
+      return true;
    }
-
-   public boolean validateCity(Patient patient)
+   /*
+    * validateZipcode checks if Zipcode is 5 or 9 digits long.
+    */
+   public boolean validateZipcode(String zipcode)
    {
-      boolean isValid = true;
-      //Checking for City
-      for(int i=0; i<patient.getCity().length(); i++)
+      //Checking Zipcode length
+      if(zipcode.length() == 9 || zipcode.length() == 5)
       {
-         char k = patient.getCity().charAt(i);
-         if(((int)k >= 65 && (int)k <= 90) || ((int)k >= 97 && (int)k <= 122))
-         {
-
-         }
-         else if(((int)k == 32) && i!=0)
-         {
-
-         }
-         else
-         {
-            return false;
-         }
-      }
-      return isValid;
-   }
-
-   public boolean validateState(Patient patient)
-   {
-      boolean isValid = true;
-      //Checking for State
-      for(int i=0; i<patient.getState().length(); i++)
-      {
-         char k = patient.getState().charAt(i);
-         if(((int)k >= 65 && (int)k <= 90) || ((int)k >= 97 && (int)k <= 122))
-         {
-
-         }
-         else if(((int)k == 32) && i!=0)
-         {
-
-         }
-         else
-         {
-            return false;
-         }
-      }
-      return isValid;
-   }
-
-   public boolean validateZipcode(Patient patient)
-   {
-      boolean isValid = true;
-      //Checking zipcode
-      if(patient.getZipcode().length() == 9 || patient.getZipcode().length() == 5)
-      {
-         //Check if ssn is numeric
+         //Checking if zipcode is numeric
          try
          {
-            Integer.parseInt(patient.getZipcode());
+            Integer.parseInt(zipcode);
 
          }catch(Exception e)
          {
@@ -154,9 +131,12 @@ public class ValidateData
       {
          return false;
       }
-      return isValid;
+      return true;
    }
 
+   /*
+    * getCorrectDoctor determines the correct primary doctor for patient according to their age.
+    */
    public String getCorrectDoctor(Patient patient)
    {
       String year = String.valueOf(patient.getBirthdate().charAt(0));;
@@ -170,7 +150,6 @@ public class ValidateData
       Calendar current_time = Calendar.getInstance();
       patient_birthdate.set(Calendar.YEAR,  Integer.parseInt(year));
       current_time.add(Calendar.YEAR, -17);
-      System.out.println(current_time.get(Calendar.YEAR) + " " + patient_birthdate.get(Calendar.YEAR));
 
       if(patient_birthdate.get(Calendar.YEAR) >= current_time.get(Calendar.YEAR))
       {
@@ -183,6 +162,9 @@ public class ValidateData
 
    }
 
+   /*
+    * validateDate checks if doctor enters date correctly (e.g YYYMMDD)
+    */
    public boolean validateDate(String date)
    {
       //Checking if string is numeric.
@@ -194,8 +176,6 @@ public class ValidateData
       {
          return false;
       }
-
-
 
       //Checking if string has correct length YYYYMMDD
 
@@ -222,32 +202,22 @@ public class ValidateData
 
          if(Integer.valueOf(year) >= 1900 && Integer.valueOf(year) <= 2022)
          {
-            if(Integer.valueOf(String.valueOf(date.charAt(4)))== 0)
+            if(Integer.valueOf(String.valueOf(date.charAt(4)))== 0 && Integer.valueOf(String.valueOf(date.charAt(5)))!= 0)
             {
-               if(Integer.valueOf(String.valueOf(date.charAt(5))) <=9)
+               if(Integer.valueOf(String.valueOf(date.charAt(6))) == 0 && Integer.valueOf(String.valueOf(date.charAt(7)))!= 0)
                {
-                  if(Integer.valueOf(String.valueOf(date.charAt(6))) == 0)
-                  {
-                     if(Integer.valueOf(String.valueOf(date.charAt(7))) <= 9)
-                     {
-                        return true;
-                     }
-                  }
-                  else if(Integer.valueOf(day) >= 10 && Integer.valueOf(day) <=31)
-                  {
-                    return true;
-                  }
+                  return true;
+               }
+               else if(Integer.valueOf(day) >= 10 && Integer.valueOf(day) <=31)
+               {
+                  return true;
                }
             }
             else if(Integer.valueOf(month) >= 10 && Integer.valueOf(month) <=12)
             {
-                  if(Integer.valueOf(String.valueOf(date.charAt(6))) == 0)
+                  if(Integer.valueOf(String.valueOf(date.charAt(6))) == 0 && Integer.valueOf(String.valueOf(date.charAt(5)))!= 0)
                   {
-                     if(Integer.valueOf(String.valueOf(date.charAt(6))) <= 9)
-                     {
-
-                        return true;
-                     }
+                     return true;
                   }
                   else if(Integer.valueOf(day) >= 10 && Integer.valueOf(day) <=31)
                   {
