@@ -142,7 +142,7 @@ public class ControllerPatient {
 
          ps.executeUpdate();
          ResultSet rs = ps.getGeneratedKeys();
-         if (rs.next()) patient.setPatientId(rs.getString(1));
+         if (rs.next()) patient.setPatientId(Integer.parseInt(rs.getString(1)));
 
          // display message and patient information
          model.addAttribute("message", "Registration successful.");
@@ -168,12 +168,12 @@ public class ControllerPatient {
 
       try (Connection con = getConnection();) {
          PreparedStatement ps = con.prepareStatement("select patientId, name, birthdate, street, city, state, zipcode, primaryName from patient where patientId=? and name=?");
-         ps.setString(1, patient.getPatientId());
+         ps.setInt(1, patient.getPatientId());
          ps.setString(2, patient.getName());
 
          ResultSet rs = ps.executeQuery();
          if (rs.next()) {
-            patient.setPatientId(rs.getString(1));
+            patient.setPatientId(Integer.parseInt(rs.getString(1)));
             patient.setName(rs.getString(2));
             patient.setBirthdate(rs.getString(3));
             patient.setStreet(rs.getString(4));
@@ -205,7 +205,7 @@ public class ControllerPatient {
    public String updatePatient(@PathVariable int patientId, Model model) {
 
       Patient patient = new Patient();
-      patient.setPatientId(String.valueOf(patientId));
+      patient.setPatientId(patientId);
       try (Connection con = getConnection();) {
 
          PreparedStatement ps = con.prepareStatement("select patientId, name, birthdate, street, city, state, zipcode, primaryName from patient where patientId=?");
@@ -213,7 +213,7 @@ public class ControllerPatient {
 
          ResultSet rs = ps.executeQuery();
          if (rs.next()) {
-            patient.setPatientId(rs.getString(1));
+            patient.setPatientId(Integer.parseInt(rs.getString(1)));
             patient.setName(rs.getString(2));
             patient.setBirthdate(rs.getString(3));
             patient.setStreet(rs.getString(4));
@@ -254,7 +254,7 @@ public class ControllerPatient {
          ps.setString(3,  patient.getState());
          ps.setString(4,  patient.getZipcode());
          ps.setString(5,  patient.getPrimaryName());
-         ps.setString(6,  patient.getPatientId());
+         ps.setInt(6,  patient.getPatientId());
 
          ValidateData validate = new ValidateData();
 
